@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Undergrad Topic Booking</title>
+  <!-- Tailwind for layout/typography -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Minimal CSS (no Tailwind @apply) for small utility classes -->
+  <style>
+    body { background:#f9fafb; color:#111827; }
+    .card { background:#fff; border-radius:1rem; box-shadow:0 10px 20px rgba(0,0,0,0.05); padding:1.5rem; }
+    .badge { display:inline-flex; align-items:center; padding:0.125rem 0.5rem; border-radius:9999px; font-size:0.75rem; font-weight:600; }
+    .badge-green { background:#dcfce7; color:#166534; }
+    .badge-red { background:#fee2e2; color:#991b1b; }
+    .badge-amber { background:#fef3c7; color:#92400e; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; border-radius:0.75rem; padding:0.5rem 1rem; font-weight:600; border:1px solid #e5e7eb; cursor:pointer; }
+    .btn-primary { background:#000; color:#fff; border-color:#000; }
+    .btn-primary:hover { opacity:0.9; }
+    .btn-ghost { background:#fff; border-color:#e5e7eb; }
+    .btn-ghost:hover { background:#f9fafb; }
+    .input { width:100%; border:1px solid #d1d5db; border-radius:0.75rem; padding:0.5rem 0.75rem; }
+    .input:focus { outline: none; box-shadow: 0 0 0 2px rgba(0,0,0,0.15); }
+    .label { display:block; font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:0.25rem; }
+    table th, table td { border-bottom:1px solid #e5e7eb; }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <h1 id="t_title" class="text-2xl md:text-3xl font-bold">Undergrad Topic Booking</h1>
+      <div class="flex items-center gap-2">
+        <label class="text-sm">Language</label>
+        <select id="lang" class="input w-auto">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+        </select>
+        <button id="refreshBtn" class="btn btn-ghost">⟳ <span class="ml-2" id="t_refresh">Refresh</span></button>
+      </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left column: check & add -->
+      <section class="lg:col-span-1 space-y-6">
+        <div class="card">
+          <h2 id="t_check_section" class="text-lg font-semibold mb-4">Check availability</h2>
+
+          <div class="space-y-3">
+            <div>
+              <label for="studentName" class="label" id="t_student_name">Student name</label>
+              <input id="studentName" class="input" placeholder="e.g., Sara Ali" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label for="studentId" class="label" id="t_student_id">Student ID</label>
+                <input id="studentId" class="input" placeholder="optional" />
+              </div>
+              <div>
+                <label for="email" class="label" id="t_email">Email</label>
+                <input id="email" class="input" placeholder="optional" />
+              </div>
+            </div>
+            <div>
+              <label for="program" class="label" id="t_program">Program</label>
+              <input id="program" class="input" placeholder="e.g., Data Science" />
+            </div>
+            <div>
+              <label for="topicTitle" class="label" id="t_topic">Topic title</label>
+              <input id="topicTitle" class="input" placeholder="Short title" />
+            </div>
+            <div>
+              <label for="dataset" class="label" id="t_dataset">Dataset (name)</label>
+              <input id="dataset" class="input" placeholder="e.g., UCI Credit" />
+            </div>
+            <div>
+              <label for="datasetLink" class="label" id="t_dataset_link">Dataset link (URL)</label>
+              <input id="datasetLink" class="input" placeholder="https://..." />
+            </div>
+            <div>
+              <label for="goal" class="label" id="t_goal">Goal / Objective</label>
+              <textarea id="goal" class="input" rows="3" placeholder="Describe the goal (e.g., fraud detection vs. churn)"></textarea>
+            </div>
+            <div>
+              <label for="teacher" class="label" id="t_teacher">Teacher</label>
+              <input id="teacher" class="input" placeholder="e.g., Dr. Ahmed" />
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <label class="inline-flex items-center gap-2">
+                <input type="checkbox" id="smartCheck" class="h-4 w-4" />
+                <span id="t_smart">Use smart similarity check (free, on‑device)</span>
+              </label>
+              <button id="checkBtn" class="btn btn-primary"><span id="t_check">Check</span></button>
+            </div>
+          </div>
+
+          <div id="checkResult" class="mt-4 hidden">
+            <div id="availabilityNote"></div>
+            <div id="conflicts" class="mt-3"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 id="t_add_section" class="text-lg font-semibold mb-4">Add booking</h2>
+          <p class="text-sm text-gray-600 mb-3" id="t_add_note">If available, submit to the sheet.</p>
+          <div class="flex items-center gap-3">
+            <button id="addBtn" class="btn btn-primary">➕ <span class="ml-2" id="t_add_btn">Add to Sheet</span></button>
+            <span id="addStatus" class="text-sm"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right column: table -->
+      <section class="lg:col-span-2 card">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+          <h2 id="t_current" class="text-lg font-semibold">Current bookings</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:w-auto">
+            <input id="filterText" class="input" placeholder="Filter text..." />
+            <input id="filterTeacher" class="input" placeholder="Filter by Teacher" />
+            <button id="clearFilters" class="btn btn-ghost">✕ <span class="ml-2" id="t_clear">Clear</span></button>
+          </div>
+        </div>
+
+        <div class="overflow-auto">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="text-left p-2">#</th>
+                <th class="text-left p-2" id="th_student">Student</th>
+                <th class="text-left p-2" id="th_topic">Topic</th>
+                <th class="text-left p-2" id="th_dataset">Dataset</th>
+                <th class="text-left p-2" id="th_goal">Goal</th>
+                <th class="text-left p-2" id="th_teacher">Teacher</th>
+                <th class="text-left p-2" id="th_status">Status</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Transformers.js for free, on-device embeddings -->
+  <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@3.0.0/dist/transformers.min.js"></script>
+
+  <script>
+    // =====  CONFIGURE THESE  =====
+    const SCRIPT_URL = 'REPLACE_WITH_YOUR_APPS_SCRIPT_WEB_APP_URL';
+    const API_TOKEN  = 'REPLACE_WITH_YOUR_SECRET_TOKEN';
+    // =============================
+
+    const i18n = {
+      en: {
+        title: 'Undergrad Topic Booking', refresh: 'Refresh', check_section: 'Check availability',
+        student_name: 'Student name', student_id: 'Student ID', email: 'Email', program: 'Program',
+        topic: 'Topic title', dataset: 'Dataset (name)', dataset_link: 'Dataset link (URL)',
+        goal: 'Goal / Objective', teacher: 'Teacher', smart: 'Use smart similarity check (free, on‑device)',
+        check: 'Check', add_section: 'Add booking', add_note: 'If available, submit to the sheet.',
+        add_btn: 'Add to Sheet', current: 'Current bookings', clear: 'Clear',
+        th_student: 'Student', th_topic: 'Topic', th_dataset: 'Dataset', th_goal: 'Goal', th_teacher: 'Teacher', th_status: 'Status',
+        available: 'Available — no conflicts found',
+        conflict_high: 'Conflict — looks already taken (very similar)',
+        conflict_medium: 'Potential overlap — same dataset with similar goal',
+        added: 'Added successfully', add_error: 'Error adding; please retry'
+      },
+      ar: {
+        title: 'حجز مواضيع الطلبة', refresh: 'تحديث', check_section: 'التحقق من التوفر',
+        student_name: 'اسم الطالب/ة', student_id: 'الرقم الجامعي', email: 'البريد الإلكتروني', program: 'البرنامج',
+        topic: 'عنوان الموضوع', dataset: 'البيانات (الاسم)', dataset_link: 'رابط البيانات (URL)',
+        goal: 'الهدف / الغاية', teacher: 'اسم المشرف/ـة', smart: 'استخدم فحص التشابه الذكي (بدون مفاتيح – يعمل على الجهاز)',
+        check: 'تحقق', add_section: 'إضافة الحجز', add_note: 'عند التوفر، أرسِل إلى الجدول.',
+        add_btn: 'إضافة إلى الجدول', current: 'الحجوزات الحالية', clear: 'مسح',
+        th_student: 'الطالب/ة', th_topic: 'الموضوع', th_dataset: 'البيانات', th_goal: 'الهدف', th_teacher: 'المشرف/ـة', th_status: 'الحالة',
+        available: 'متاح — لا توجد تعارضات',
+        conflict_high: 'تعارض — يبدو أنه محجوز (متشابه جدًا)',
+        conflict_medium: 'تداخل محتمل — نفس البيانات مع هدف مشابه',
+        added: 'تمت الإضافة بنجاح', add_error: 'حدث خطأ أثناء الإضافة'
+      }
+    };
+
+    // Elements
+    const els = {
+      title: document.getElementById('t_title'),
+      refresh: document.getElementById('t_refresh'),
+      checkSection: document.getElementById('t_check_section'),
+      studentName: document.getElementById('t_student_name'),
+      studentId: document.getElementById('t_student_id'),
+      email: document.getElementById('t_email'),
+      program: document.getElementById('t_program'),
+      topic: document.getElementById('t_topic'),
+      dataset: document.getElementById('t_dataset'),
+      datasetLink: document.getElementById('t_dataset_link'),
+      goal: document.getElementById('t_goal'),
+      teacher: document.getElementById('t_teacher'),
+      smart: document.getElementById('t_smart'),
+      check: document.getElementById('t_check'),
+      addSection: document.getElementById('t_add_section'),
+      addNote: document.getElementById('t_add_note'),
+      addBtn: document.getElementById('t_add_btn'),
+      current: document.getElementById('t_current'),
+      clear: document.getElementById('t_clear'),
+      th: {
+        student: document.getElementById('th_student'),
+        topic: document.getElementById('th_topic'),
+        dataset: document.getElementById('th_dataset'),
+        goal: document.getElementById('th_goal'),
+        teacher: document.getElementById('th_teacher'),
+        status: document.getElementById('th_status'),
+      }
+    };
+
+    function setLang(lang) {
+      const L = i18n[lang] || i18n.en;
+      document.body.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+      els.title.textContent = L.title; els.refresh.textContent = L.refresh; els.checkSection.textContent = L.check_section;
+      els.studentName.textContent = L.student_name; els.studentId.textContent = L.student_id; els.email.textContent = L.email; els.program.textContent = L.program;
+      els.topic.textContent = L.topic; els.dataset.textContent = L.dataset; els.datasetLink.textContent = L.dataset_link; els.goal.textContent = L.goal; els.teacher.textContent = L.teacher;
+      els.smart.textContent = L.smart; els.check.textContent = L.check; els.addSection.textContent = L.add_section; els.addNote.textContent = L.add_note; els.addBtn.textContent = L.add_btn; els.current.textContent = L.current; els.clear.textContent = L.clear;
+      els.th.student.textContent = L.th_student; els.th.topic.textContent = L.th_topic; els.th.dataset.textContent = L.th_dataset; els.th.goal.textContent = L.th_goal; els.th.teacher.textContent = L.th_teacher; els.th.status.textContent = L.th_status;
+    }
+
+    document.getElementById('lang').addEventListener('change', (e) => setLang(e.target.value));
+    setLang('en');
+
+    const input = {
+      studentName: document.getElementById('studentName'),
+      studentId: document.getElementById('studentId'),
+      email: document.getElementById('email'),
+      program: document.getElementById('program'),
+      topicTitle: document.getElementById('topicTitle'),
+      dataset: document.getElementById('dataset'),
+      datasetLink: document.getElementById('datasetLink'),
+      goal: document.getElementById('goal'),
+      teacher: document.getElementById('teacher'),
+    };
+
+    const checkBtn = document.getElementById('checkBtn');
+    const smartCheck = document.getElementById('smartCheck');
+    const checkResult = document.getElementById('checkResult');
+    const availabilityNote = document.getElementById('availabilityNote');
+    const conflictsBox = document.getElementById('conflicts');
+
+    const addBtn = document.getElementById('addBtn');
+    const addStatus = document.getElementById('addStatus');
+
+    const filterText = document.getElementById('filterText');
+    const filterTeacher = document.getElementById('filterTeacher');
+    const clearFilters = document.getElementById('clearFilters');
+    const rowsTbody = document.getElementById('rows');
+
+    document.getElementById('refreshBtn').addEventListener('click', () => loadRows());
+    clearFilters.addEventListener('click', () => { filterText.value=''; filterTeacher.value=''; renderRows(); });
+    filterText.addEventListener('input', renderRows);
+    filterTeacher.addEventListener('input', renderRows);
+
+    let allRows = [];
+
+    async function loadRows() {
+      rowsTbody.innerHTML = `<tr><td class="p-2 text-gray-500" colspan="7">Loading…</td></tr>`;
+      try {
+        const url = `${SCRIPT_URL}?action=list&token=${encodeURIComponent(API_TOKEN)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        allRows = (data.rows || []).map((r, idx) => ({
+          idx,
+          Timestamp: r.Timestamp ? new Date(r.Timestamp) : '',
+          StudentName: r.StudentName || '',
+          StudentID: r.StudentID || '',
+          Email: r.Email || '',
+          Program: r.Program || '',
+          TopicTitle: r.TopicTitle || '',
+          Dataset: r.Dataset || '',
+          DatasetLink: r.DatasetLink || '',
+          Goal: r.Goal || '',
+          Teacher: r.Teacher || '',
+          Status: r.Status || 'Booked',
+          Notes: r.Notes || ''
+        }));
+        renderRows();
+      } catch (err) {
+        rowsTbody.innerHTML = `<tr><td class="p-2 text-red-600" colspan="7">Error loading rows</td></tr>`;
+        console.error(err);
+      }
+    }
+
+    function renderRows() {
+      const t = (filterText.value || '').toLowerCase();
+      const ft = (filterTeacher.value || '').toLowerCase();
+      const filtered = allRows.filter(r => {
+        const hay = `${r.StudentName} ${r.TopicTitle} ${r.Dataset} ${r.Goal} ${r.Teacher}`.toLowerCase();
+        return (!t || hay.includes(t)) && (!ft || (r.Teacher || '').toLowerCase().includes(ft));
+      });
+
+      rowsTbody.innerHTML = '';
+      filtered.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.className = i % 2 ? 'bg-white' : 'bg-gray-50';
+        tr.innerHTML = `
+          <td class="p-2">${i+1}</td>
+          <td class="p-2">${escapeHtml(r.StudentName)}</td>
+          <td class="p-2">${escapeHtml(r.TopicTitle)}</td>
+          <td class="p-2">${escapeHtml(r.Dataset)}${r.DatasetLink ? ` <a class="text-blue-700 underline" href="${r.DatasetLink}" target="_blank">↗</a>` : ''}</td>
+          <td class="p-2 max-w-[20rem] truncate" title="${escapeHtml(r.Goal)}">${escapeHtml(r.Goal)}</td>
+          <td class="p-2">${escapeHtml(r.Teacher)}</td>
+          <td class="p-2">${statusBadge(r.Status)}</td>
+        `;
+        rowsTbody.appendChild(tr);
+      });
+
+      if (!filtered.length) {
+        rowsTbody.innerHTML = `<tr><td class="p-2 text-gray-500" colspan="7">No rows</td></tr>`;
+      }
+    }
+
+    function statusBadge(s) {
+      const S = (s || 'Booked').toLowerCase();
+      if (S.includes('book')) return `<span class="badge badge-green">Booked</span>`;
+      if (S.includes('hold') || S.includes('pending')) return `<span class="badge badge-amber">Pending</span>`;
+      return `<span class="badge badge-amber">${escapeHtml(s || '—')}</span>`;
+    }
+
+    function escapeHtml(str) {
+      return (str ?? '').toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    // ======= Similarity (free, on‑device) =======
+    let embedder = null; // transformers pipeline
+    async function ensureEmbedderLoaded() {
+      if (!embedder) {
+        // This loads a small sentence-transformer under the hood
+        embedder = await window.transformers.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+      }
+    }
+
+    async function embedText(text) {
+      // Mean-pooled, normalized embedding
+      const out = await embedder(text, { pooling: 'mean', normalize: true });
+      return Array.from(out.data);
+    }
+
+    function cosineSim(a, b) {
+      let s = 0; for (let i = 0; i < a.length; i++) s += a[i]*b[i];
+      return s; // normalized already
+    }
+
+    function canonicalizeDataset(ds) {
+      return (ds || '').trim().toLowerCase().replace(/https?:\/\/|www\.|\/$/g, '');
+    }
+
+    function isExactConflict(newRow, existingRow) {
+      // Conflict rules:
+      // 1) Exact same TopicTitle (case-insensitive) → conflict
+      // 2) Same Dataset (name or link) AND very similar Goal → conflict
+      const sameTopic = (newRow.TopicTitle || '').trim().toLowerCase() === (existingRow.TopicTitle || '').trim().toLowerCase();
+      if (sameTopic) return true;
+
+      const dsNew = canonicalizeDataset(newRow.Dataset || newRow.DatasetLink);
+      const dsOld = canonicalizeDataset(existingRow.Dataset || existingRow.DatasetLink);
+      return dsNew && dsOld && dsNew === dsOld; // final decision refined with similarity if smart mode on
+    }
+
+    checkBtn.addEventListener('click', async () => {
+      availabilityNote.innerHTML = '';
+      conflictsBox.innerHTML = '';
+      checkResult.classList.remove('hidden');
+
+      const candidate = {
+        TopicTitle: input.topicTitle.value.trim(),
+        Dataset: input.dataset.value.trim(),
+        DatasetLink: input.datasetLink.value.trim(),
+        Goal: input.goal.value.trim()
+      };
+
+      const lang = document.getElementById('lang').value;
+      const L = i18n[lang] || i18n.en;
+
+      // Basic checks
+      if (!candidate.TopicTitle && !candidate.Dataset && !candidate.Goal) {
+        availabilityNote.innerHTML = `<div class="badge badge-amber">Please enter topic/dataset/goal</div>`;
+        return;
+      }
+
+      let smart = smartCheck.checked;
+      let candVec = null;
+      if (smart) {
+        // Might take a few seconds on first load
+        await ensureEmbedderLoaded();
+        candVec = await embedText(`${candidate.TopicTitle} ${candidate.Dataset} ${candidate.Goal}`);
+      }
+
+      // Scan existing rows
+      let topMatches = [];
+      for (const r of allRows) {
+        const maybeConflict = isExactConflict(candidate, r);
+        let score = 0;
+        if (smart) {
+          const rVec = await embedText(`${r.TopicTitle} ${r.Dataset} ${r.Goal}`);
+          score = cosineSim(candVec, rVec);
+        } else {
+          // lightweight lexical similarity (Jaccard on tokens)
+          const A = new Set((`${candidate.TopicTitle} ${candidate.Dataset} ${candidate.Goal}`).toLowerCase().split(/\W+/).filter(Boolean));
+          const B = new Set((`${r.TopicTitle} ${r.Dataset} ${r.Goal}`).toLowerCase().split(/\W+/).filter(Boolean));
+          let inter = 0; for (const x of A) if (B.has(x)) inter++;
+          const union = A.size + B.size - inter;
+          score = union ? inter/union : 0;
+        }
+        topMatches.push({ r, score, maybeConflict });
+      }
+
+      topMatches.sort((a,b) => b.score - a.score);
+      const strong = topMatches.filter(x => x.score >= 0.85 || (x.maybeConflict && x.score >= 0.75));
+      const medium = topMatches.filter(x => x.score >= 0.65 && x.score < 0.85);
+
+      if (strong.length) {
+        availabilityNote.innerHTML = `<div class="badge badge-red">${L.conflict_high}</div>`;
+      } else if (medium.some(x => x.maybeConflict)) {
+        availabilityNote.innerHTML = `<div class="badge badge-amber">${L.conflict_medium}</div>`;
+      } else {
+        availabilityNote.innerHTML = `<div class="badge badge-green">${L.available}</div>`;
+      }
+
+      // Show top 5 matches
+      const top5 = topMatches.slice(0, 5);
+      conflictsBox.innerHTML = top5.map(({r, score}) => `
+        <div class="mt-2 p-2 rounded-lg border bg-gray-50">
+          <div class="text-xs text-gray-500">similarity: ${(score*100).toFixed(1)}%</div>
+          <div class="font-medium">${escapeHtml(r.TopicTitle)} — <span class="text-gray-600">${escapeHtml(r.Teacher)}</span></div>
+          <div class="text-sm">${escapeHtml(r.Dataset)} ${r.DatasetLink ? `<a href="${r.DatasetLink}" target="_blank" class="text-blue-700 underline">↗</a>` : ''}</div>
+          <div class="text-sm text-gray-700">${escapeHtml(r.Goal)}</div>
+        </div>
+      `).join('');
+    });
+
+    addBtn.addEventListener('click', async () => {
+      addStatus.textContent = '';
+      const payload = {
+        StudentName: input.studentName.value.trim(),
+        StudentID: input.studentId.value.trim(),
+        Email: input.email.value.trim(),
+        Program: input.program.value.trim(),
+        TopicTitle: input.topicTitle.value.trim(),
+        Dataset: input.dataset.value.trim(),
+        DatasetLink: input.datasetLink.value.trim(),
+        Goal: input.goal.value.trim(),
+        Teacher: input.teacher.value.trim(),
+        Status: 'Booked',
+        Notes: ''
+      };
+
+      try {
+        const form = new URLSearchParams();
+        form.set('token', API_TOKEN);
+        form.set('data', JSON.stringify(payload));
+
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: form.toString(),
+        });
+        const data = await res.json();
+        if (data && data.ok) {
+          addStatus.className = 'text-green-700';
+          addStatus.textContent = i18n[document.getElementById('lang').value].added;
+          await loadRows();
+        } else {
+          throw new Error('API error');
+        }
+      } catch (err) {
+        addStatus.className = 'text-red-700';
+        addStatus.textContent = i18n[document.getElementById('lang').value].add_error;
+        console.error(err);
+      }
+    });
+
+    // Init
+    loadRows();
+  </script>
+</body>
+</html>
