@@ -4,134 +4,315 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Undergrad Topic Booking</title>
-  <!-- Tailwind for layout/typography -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Minimal CSS (no Tailwind @apply) for small utility classes -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    body { background:#f9fafb; color:#111827; }
-    .card { background:#fff; border-radius:1rem; box-shadow:0 10px 20px rgba(0,0,0,0.05); padding:1.5rem; }
-    .badge { display:inline-flex; align-items:center; padding:0.125rem 0.5rem; border-radius:9999px; font-size:0.75rem; font-weight:600; }
-    .badge-green { background:#dcfce7; color:#166534; }
-    .badge-red { background:#fee2e2; color:#991b1b; }
-    .badge-amber { background:#fef3c7; color:#92400e; }
-    .btn { display:inline-flex; align-items:center; justify-content:center; border-radius:0.75rem; padding:0.5rem 1rem; font-weight:600; border:1px solid #e5e7eb; cursor:pointer; }
-    .btn-primary { background:#000; color:#fff; border-color:#000; }
-    .btn-primary:hover { opacity:0.9; }
-    .btn-ghost { background:#fff; border-color:#e5e7eb; }
-    .btn-ghost:hover { background:#f9fafb; }
-    .input { width:100%; border:1px solid #d1d5db; border-radius:0.75rem; padding:0.5rem 0.75rem; }
-    .input:focus { outline: none; box-shadow: 0 0 0 2px rgba(0,0,0,0.15); }
-    .label { display:block; font-size:0.875rem; font-weight:600; color:#374151; margin-bottom:0.25rem; }
-    table th, table td { border-bottom:1px solid #e5e7eb; }
+    body { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+    .glass-card { 
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+    }
+    .input-modern {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .input-modern:focus {
+      background: rgba(255, 255, 255, 1);
+      border-color: #667eea;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+      outline: none;
+    }
+    .btn-modern {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+    .btn-modern:active {
+      transform: translateY(0);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      color: #667eea;
+      transition: all 0.3s ease;
+    }
+    .btn-secondary:hover {
+      background: rgba(102, 126, 234, 0.1);
+      border-color: #667eea;
+    }
+    .status-badge {
+      padding: 0.375rem 0.875rem;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      animation: fade-in 0.5s ease-out;
+    }
+    .badge-available {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    .badge-conflict {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    .badge-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+    .badge-booked {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    .badge-pending {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+    .loading-spinner {
+      border: 3px solid rgba(102, 126, 234, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid #667eea;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .floating-header {
+      backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .similarity-bar {
+      background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+      height: 4px;
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    .similarity-indicator {
+      background: rgba(255, 255, 255, 0.8);
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
   </style>
 </head>
 <body class="min-h-screen">
-  <div class="max-w-6xl mx-auto p-4 md:p-8">
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-      <h1 id="t_title" class="text-2xl md:text-3xl font-bold">Undergrad Topic Booking</h1>
-      <div class="flex items-center gap-2">
-        <label class="text-sm">Language</label>
-        <select id="lang" class="input w-auto">
-          <option value="en">English</option>
-          <option value="ar">العربية</option>
-        </select>
-        <button id="refreshBtn" class="btn btn-ghost">⟳ <span class="ml-2" id="t_refresh">Refresh</span></button>
+  <div class="fixed inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-800 opacity-95"></div>
+  
+  <div class="relative z-10 max-w-7xl mx-auto p-4 md:p-8">
+    <header class="floating-header rounded-2xl p-6 mb-8 animate-fade-in">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 id="t_title" class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Undergrad Topic Booking
+          </h1>
+          <p class="text-gray-600 mt-1">Manage student research topics with smart conflict detection</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="text-sm font-medium text-gray-700">Language</label>
+          <select id="lang" class="input-modern rounded-xl px-3 py-2 text-sm">
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+          </select>
+          <button id="refreshBtn" class="btn-secondary px-4 py-2 rounded-xl flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span id="t_refresh">Refresh</span>
+          </button>
+        </div>
       </div>
     </header>
 
-    <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Left column: check & add -->
-      <section class="lg:col-span-1 space-y-6">
-        <div class="card">
-          <h2 id="t_check_section" class="text-lg font-semibold mb-4">Check availability</h2>
-
-          <div class="space-y-3">
-            <div>
-              <label for="studentName" class="label" id="t_student_name">Student name</label>
-              <input id="studentName" class="input" placeholder="e.g., Sara Ali" />
+      <section class="lg:col-span-1 space-y-8">
+        <div class="glass-card rounded-2xl p-6 animate-slide-up">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label for="studentId" class="label" id="t_student_id">Student ID</label>
-                <input id="studentId" class="input" placeholder="optional" />
-              </div>
-              <div>
-                <label for="email" class="label" id="t_email">Email</label>
-                <input id="email" class="input" placeholder="optional" />
-              </div>
-            </div>
-            <div>
-              <label for="program" class="label" id="t_program">Program</label>
-              <input id="program" class="input" placeholder="e.g., Data Science" />
-            </div>
-            <div>
-              <label for="topicTitle" class="label" id="t_topic">Topic title</label>
-              <input id="topicTitle" class="input" placeholder="Short title" />
-            </div>
-            <div>
-              <label for="dataset" class="label" id="t_dataset">Dataset (name)</label>
-              <input id="dataset" class="input" placeholder="e.g., UCI Credit" />
-            </div>
-            <div>
-              <label for="datasetLink" class="label" id="t_dataset_link">Dataset link (URL)</label>
-              <input id="datasetLink" class="input" placeholder="https://..." />
-            </div>
-            <div>
-              <label for="goal" class="label" id="t_goal">Goal / Objective</label>
-              <textarea id="goal" class="input" rows="3" placeholder="Describe the goal (e.g., fraud detection vs. churn)"></textarea>
-            </div>
-            <div>
-              <label for="teacher" class="label" id="t_teacher">Teacher</label>
-              <input id="teacher" class="input" placeholder="e.g., Dr. Ahmed" />
-            </div>
-
-            <div class="flex items-center justify-between pt-2">
-              <label class="inline-flex items-center gap-2">
-                <input type="checkbox" id="smartCheck" class="h-4 w-4" />
-                <span id="t_smart">Use smart similarity check (free, on‑device)</span>
-              </label>
-              <button id="checkBtn" class="btn btn-primary"><span id="t_check">Check</span></button>
-            </div>
+            <h2 id="t_check_section" class="text-xl font-bold text-gray-800">Check Availability</h2>
           </div>
 
-          <div id="checkResult" class="mt-4 hidden">
-            <div id="availabilityNote"></div>
-            <div id="conflicts" class="mt-3"></div>
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="studentName" class="block text-sm font-semibold text-gray-700 mb-2" id="t_student_name">Student Name</label>
+                <input id="studentName" class="input-modern w-full rounded-xl px-4 py-3" placeholder="e.g., Sara Ali" />
+              </div>
+              <div>
+                <label for="studentId" class="block text-sm font-semibold text-gray-700 mb-2" id="t_student_id">Student ID</label>
+                <input id="studentId" class="input-modern w-full rounded-xl px-4 py-3" placeholder="Optional" />
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="email" class="block text-sm font-semibold text-gray-700 mb-2" id="t_email">Email</label>
+                <input id="email" type="email" class="input-modern w-full rounded-xl px-4 py-3" placeholder="student@university.edu" />
+              </div>
+              <div>
+                <label for="program" class="block text-sm font-semibold text-gray-700 mb-2" id="t_program">Program</label>
+                <input id="program" class="input-modern w-full rounded-xl px-4 py-3" placeholder="e.g., Data Science" />
+              </div>
+            </div>
+
+            <div>
+              <label for="topicTitle" class="block text-sm font-semibold text-gray-700 mb-2" id="t_topic">Topic Title</label>
+              <input id="topicTitle" class="input-modern w-full rounded-xl px-4 py-3" placeholder="Short descriptive title" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="dataset" class="block text-sm font-semibold text-gray-700 mb-2" id="t_dataset">Dataset Name</label>
+                <input id="dataset" class="input-modern w-full rounded-xl px-4 py-3" placeholder="e.g., UCI Credit" />
+              </div>
+              <div>
+                <label for="datasetLink" class="block text-sm font-semibold text-gray-700 mb-2" id="t_dataset_link">Dataset URL</label>
+                <input id="datasetLink" type="url" class="input-modern w-full rounded-xl px-4 py-3" placeholder="https://..." />
+              </div>
+            </div>
+
+            <div>
+              <label for="goal" class="block text-sm font-semibold text-gray-700 mb-2" id="t_goal">Research Goal</label>
+              <textarea id="goal" class="input-modern w-full rounded-xl px-4 py-3" rows="3" placeholder="Describe the research objective (e.g., fraud detection vs. customer churn prediction)"></textarea>
+            </div>
+
+            <div>
+              <label for="teacher" class="block text-sm font-semibold text-gray-700 mb-2" id="t_teacher">Supervisor</label>
+              <input id="teacher" class="input-modern w-full rounded-xl px-4 py-3" placeholder="e.g., Dr. Ahmed" />
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+              <label class="flex items-center gap-3">
+                <input type="checkbox" id="smartCheck" class="w-5 h-5 text-blue-600 bg-white border-2 border-gray-300 rounded focus:ring-blue-500" />
+                <span id="t_smart" class="text-sm font-medium text-gray-700">Use AI similarity check (free, on-device)</span>
+              </label>
+              <p class="text-xs text-gray-500 mt-1 ml-8">Powered by Transformers.js - no data leaves your device</p>
+            </div>
+
+            <button id="checkBtn" class="btn-modern w-full py-3 rounded-xl flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span id="t_check">Check Availability</span>
+            </button>
+          </div>
+
+          <div id="checkResult" class="mt-6 hidden">
+            <div id="availabilityNote" class="mb-4"></div>
+            <div id="conflicts"></div>
           </div>
         </div>
 
-        <div class="card">
-          <h2 id="t_add_section" class="text-lg font-semibold mb-4">Add booking</h2>
-          <p class="text-sm text-gray-600 mb-3" id="t_add_note">If available, submit to the sheet.</p>
-          <div class="flex items-center gap-3">
-            <button id="addBtn" class="btn btn-primary">➕ <span class="ml-2" id="t_add_btn">Add to Sheet</span></button>
-            <span id="addStatus" class="text-sm"></span>
+        <div class="glass-card rounded-2xl p-6 animate-slide-up" style="animation-delay: 0.1s">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+            </div>
+            <h2 id="t_add_section" class="text-xl font-bold text-gray-800">Add Booking</h2>
           </div>
+          <p class="text-gray-600 mb-4" id="t_add_note">Submit your topic if it's available and approved.</p>
+          
+          <button id="addBtn" class="btn-modern w-full py-3 rounded-xl flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span id="t_add_btn">Add to Sheet</span>
+          </button>
+          
+          <div id="addStatus" class="mt-3 text-sm text-center"></div>
         </div>
       </section>
 
       <!-- Right column: table -->
-      <section class="lg:col-span-2 card">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
-          <h2 id="t_current" class="text-lg font-semibold">Current bookings</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full md:w-auto">
-            <input id="filterText" class="input" placeholder="Filter text..." />
-            <input id="filterTeacher" class="input" placeholder="Filter by Teacher" />
-            <button id="clearFilters" class="btn btn-ghost">✕ <span class="ml-2" id="t_clear">Clear</span></button>
+      <section class="lg:col-span-2 glass-card rounded-2xl p-6 animate-slide-up" style="animation-delay: 0.2s">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"></path>
+              </svg>
+            </div>
+            <h2 id="t_current" class="text-xl font-bold text-gray-800">Current Bookings</h2>
+          </div>
+          
+          <div class="flex gap-3">
+            <input id="filterText" class="input-modern rounded-xl px-4 py-2 text-sm" placeholder="Search..." />
+            <input id="filterTeacher" class="input-modern rounded-xl px-4 py-2 text-sm" placeholder="Filter by Teacher" />
+            <button id="clearFilters" class="btn-secondary px-4 py-2 rounded-xl flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              <span id="t_clear">Clear</span>
+            </button>
           </div>
         </div>
 
-        <div class="overflow-auto">
-          <table class="min-w-full text-sm">
-            <thead class="bg-gray-100">
+        <div class="overflow-auto rounded-xl border border-gray-200">
+          <table class="min-w-full">
+            <thead class="bg-gradient-to-r from-gray-50 to-gray-100">
               <tr>
-                <th class="text-left p-2">#</th>
-                <th class="text-left p-2" id="th_student">Student</th>
-                <th class="text-left p-2" id="th_topic">Topic</th>
-                <th class="text-left p-2" id="th_dataset">Dataset</th>
-                <th class="text-left p-2" id="th_goal">Goal</th>
-                <th class="text-left p-2" id="th_teacher">Teacher</th>
-                <th class="text-left p-2" id="th_status">Status</th>
+                <th class="text-left p-4 font-semibold text-gray-700">#</th>
+                <th class="text-left p-4 font-semibold text-gray-700" id="th_student">Student</th>
+                <th class="text-left p-4 font-semibold text-gray-700" id="th_topic">Topic</th>
+                <th class="text-left p-4 font-semibold text-gray-700" id="th_dataset">Dataset</th>
+                <th class="text-left p-4 font-semibold text-gray-700" id="th_goal">Goal</th>
+                <th class="text-left p-4 font-semibold text-gray-700" id="th_teacher">Teacher</th>
+                <th class="text-left p-4 font-semibold text-gray-700" id="th_status">Status</th>
               </tr>
             </thead>
             <tbody id="rows"></tbody>
@@ -152,30 +333,32 @@
 
     const i18n = {
       en: {
-        title: 'Undergrad Topic Booking', refresh: 'Refresh', check_section: 'Check availability',
-        student_name: 'Student name', student_id: 'Student ID', email: 'Email', program: 'Program',
-        topic: 'Topic title', dataset: 'Dataset (name)', dataset_link: 'Dataset link (URL)',
-        goal: 'Goal / Objective', teacher: 'Teacher', smart: 'Use smart similarity check (free, on‑device)',
-        check: 'Check', add_section: 'Add booking', add_note: 'If available, submit to the sheet.',
-        add_btn: 'Add to Sheet', current: 'Current bookings', clear: 'Clear',
+        title: 'Undergrad Topic Booking', refresh: 'Refresh', check_section: 'Check Availability',
+        student_name: 'Student Name', student_id: 'Student ID', email: 'Email', program: 'Program',
+        topic: 'Topic Title', dataset: 'Dataset Name', dataset_link: 'Dataset URL',
+        goal: 'Research Goal', teacher: 'Supervisor', smart: 'Use AI similarity check (free, on-device)',
+        check: 'Check Availability', add_section: 'Add Booking', add_note: 'Submit your topic if it\'s available and approved.',
+        add_btn: 'Add to Sheet', current: 'Current Bookings', clear: 'Clear',
         th_student: 'Student', th_topic: 'Topic', th_dataset: 'Dataset', th_goal: 'Goal', th_teacher: 'Teacher', th_status: 'Status',
-        available: 'Available — no conflicts found',
-        conflict_high: 'Conflict — looks already taken (very similar)',
-        conflict_medium: 'Potential overlap — same dataset with similar goal',
-        added: 'Added successfully', add_error: 'Error adding; please retry'
+        available: '✅ Available — no conflicts found',
+        conflict_high: '❌ Conflict — looks already taken (very similar)',
+        conflict_medium: '⚠️ Potential overlap — same dataset with similar goal',
+        added: '✅ Added successfully', add_error: '❌ Error adding; please retry',
+        loading: 'Loading...', checking: 'Checking...', adding: 'Adding...'
       },
       ar: {
         title: 'حجز مواضيع الطلبة', refresh: 'تحديث', check_section: 'التحقق من التوفر',
         student_name: 'اسم الطالب/ة', student_id: 'الرقم الجامعي', email: 'البريد الإلكتروني', program: 'البرنامج',
         topic: 'عنوان الموضوع', dataset: 'البيانات (الاسم)', dataset_link: 'رابط البيانات (URL)',
-        goal: 'الهدف / الغاية', teacher: 'اسم المشرف/ـة', smart: 'استخدم فحص التشابه الذكي (بدون مفاتيح – يعمل على الجهاز)',
-        check: 'تحقق', add_section: 'إضافة الحجز', add_note: 'عند التوفر، أرسِل إلى الجدول.',
+        goal: 'الهدف / الغاية', teacher: 'اسم المشرف/ة', smart: 'استخدم فحص التشابه الذكي (بدون مفاتيح — يعمل على الجهاز)',
+        check: 'تحقق', add_section: 'إضافة الحجز', add_note: 'عند التوفر، أرسل إلى الجدول.',
         add_btn: 'إضافة إلى الجدول', current: 'الحجوزات الحالية', clear: 'مسح',
-        th_student: 'الطالب/ة', th_topic: 'الموضوع', th_dataset: 'البيانات', th_goal: 'الهدف', th_teacher: 'المشرف/ـة', th_status: 'الحالة',
-        available: 'متاح — لا توجد تعارضات',
-        conflict_high: 'تعارض — يبدو أنه محجوز (متشابه جدًا)',
-        conflict_medium: 'تداخل محتمل — نفس البيانات مع هدف مشابه',
-        added: 'تمت الإضافة بنجاح', add_error: 'حدث خطأ أثناء الإضافة'
+        th_student: 'الطالب/ة', th_topic: 'الموضوع', th_dataset: 'البيانات', th_goal: 'الهدف', th_teacher: 'المشرف/ة', th_status: 'الحالة',
+        available: '✅ متاح — لا توجد تعارضات',
+        conflict_high: '❌ تعارض — يبدو أنه محجوز (متشابه جداً)',
+        conflict_medium: '⚠️ تداخل محتمل — نفس البيانات مع هدف مشابه',
+        added: '✅ تمت الإضافة بنجاح', add_error: '❌ حدث خطأ أثناء الإضافة',
+        loading: 'جاري التحميل...', checking: 'جاري التحقق...', adding: 'جاري الإضافة...'
       }
     };
 
@@ -213,11 +396,31 @@
     function setLang(lang) {
       const L = i18n[lang] || i18n.en;
       document.body.dir = (lang === 'ar') ? 'rtl' : 'ltr';
-      els.title.textContent = L.title; els.refresh.textContent = L.refresh; els.checkSection.textContent = L.check_section;
-      els.studentName.textContent = L.student_name; els.studentId.textContent = L.student_id; els.email.textContent = L.email; els.program.textContent = L.program;
-      els.topic.textContent = L.topic; els.dataset.textContent = L.dataset; els.datasetLink.textContent = L.dataset_link; els.goal.textContent = L.goal; els.teacher.textContent = L.teacher;
-      els.smart.textContent = L.smart; els.check.textContent = L.check; els.addSection.textContent = L.add_section; els.addNote.textContent = L.add_note; els.addBtn.textContent = L.add_btn; els.current.textContent = L.current; els.clear.textContent = L.clear;
-      els.th.student.textContent = L.th_student; els.th.topic.textContent = L.th_topic; els.th.dataset.textContent = L.th_dataset; els.th.goal.textContent = L.th_goal; els.th.teacher.textContent = L.th_teacher; els.th.status.textContent = L.th_status;
+      els.title.textContent = L.title; 
+      els.refresh.textContent = L.refresh; 
+      els.checkSection.textContent = L.check_section;
+      els.studentName.textContent = L.student_name; 
+      els.studentId.textContent = L.student_id; 
+      els.email.textContent = L.email; 
+      els.program.textContent = L.program;
+      els.topic.textContent = L.topic; 
+      els.dataset.textContent = L.dataset; 
+      els.datasetLink.textContent = L.dataset_link; 
+      els.goal.textContent = L.goal; 
+      els.teacher.textContent = L.teacher;
+      els.smart.textContent = L.smart; 
+      els.check.textContent = L.check; 
+      els.addSection.textContent = L.add_section; 
+      els.addNote.textContent = L.add_note; 
+      els.addBtn.textContent = L.add_btn; 
+      els.current.textContent = L.current; 
+      els.clear.textContent = L.clear;
+      els.th.student.textContent = L.th_student; 
+      els.th.topic.textContent = L.th_topic; 
+      els.th.dataset.textContent = L.th_dataset; 
+      els.th.goal.textContent = L.th_goal; 
+      els.th.teacher.textContent = L.th_teacher; 
+      els.th.status.textContent = L.th_status;
     }
 
     document.getElementById('lang').addEventListener('change', (e) => setLang(e.target.value));
@@ -250,18 +453,41 @@
     const rowsTbody = document.getElementById('rows');
 
     document.getElementById('refreshBtn').addEventListener('click', () => loadRows());
-    clearFilters.addEventListener('click', () => { filterText.value=''; filterTeacher.value=''; renderRows(); });
+    clearFilters.addEventListener('click', () => { 
+      filterText.value=''; 
+      filterTeacher.value=''; 
+      renderRows(); 
+    });
     filterText.addEventListener('input', renderRows);
     filterTeacher.addEventListener('input', renderRows);
 
     let allRows = [];
 
     async function loadRows() {
-      rowsTbody.innerHTML = `<tr><td class="p-2 text-gray-500" colspan="7">Loading…</td></tr>`;
+      const lang = document.getElementById('lang').value;
+      const L = i18n[lang] || i18n.en;
+      
+      rowsTbody.innerHTML = `<tr><td class="p-4 text-gray-500 text-center" colspan="7">
+        <div class="flex items-center justify-center gap-2">
+          <div class="loading-spinner"></div>
+          ${L.loading}
+        </div>
+      </td></tr>`;
+      
       try {
         const url = `${SCRIPT_URL}?action=list&token=${encodeURIComponent(API_TOKEN)}`;
         const res = await fetch(url);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
         const data = await res.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
         allRows = (data.rows || []).map((r, idx) => ({
           idx,
           Timestamp: r.Timestamp ? new Date(r.Timestamp) : '',
@@ -277,10 +503,18 @@
           Status: r.Status || 'Booked',
           Notes: r.Notes || ''
         }));
+        
         renderRows();
       } catch (err) {
-        rowsTbody.innerHTML = `<tr><td class="p-2 text-red-600" colspan="7">Error loading rows</td></tr>`;
-        console.error(err);
+        console.error('Load error:', err);
+        rowsTbody.innerHTML = `<tr><td class="p-4 text-red-600 text-center" colspan="7">
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Error loading data: ${err.message}
+          </div>
+        </td></tr>`;
       }
     }
 
@@ -295,53 +529,86 @@
       rowsTbody.innerHTML = '';
       filtered.forEach((r, i) => {
         const tr = document.createElement('tr');
-        tr.className = i % 2 ? 'bg-white' : 'bg-gray-50';
+        tr.className = `${i % 2 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors duration-200`;
         tr.innerHTML = `
-          <td class="p-2">${i+1}</td>
-          <td class="p-2">${escapeHtml(r.StudentName)}</td>
-          <td class="p-2">${escapeHtml(r.TopicTitle)}</td>
-          <td class="p-2">${escapeHtml(r.Dataset)}${r.DatasetLink ? ` <a class="text-blue-700 underline" href="${r.DatasetLink}" target="_blank">↗</a>` : ''}</td>
-          <td class="p-2 max-w-[20rem] truncate" title="${escapeHtml(r.Goal)}">${escapeHtml(r.Goal)}</td>
-          <td class="p-2">${escapeHtml(r.Teacher)}</td>
-          <td class="p-2">${statusBadge(r.Status)}</td>
+          <td class="p-4 font-medium text-gray-600">${i+1}</td>
+          <td class="p-4">
+            <div class="font-medium text-gray-900">${escapeHtml(r.StudentName)}</div>
+            <div class="text-sm text-gray-500">${escapeHtml(r.Program)}</div>
+          </td>
+          <td class="p-4">
+            <div class="font-medium text-gray-900">${escapeHtml(r.TopicTitle)}</div>
+          </td>
+          <td class="p-4">
+            <div class="font-medium text-gray-900">${escapeHtml(r.Dataset)}</div>
+            ${r.DatasetLink ? `<a class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 mt-1" href="${r.DatasetLink}" target="_blank">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+              View Dataset
+            </a>` : ''}
+          </td>
+          <td class="p-4 max-w-xs">
+            <div class="text-sm text-gray-900 line-clamp-2" title="${escapeHtml(r.Goal)}">${escapeHtml(r.Goal)}</div>
+          </td>
+          <td class="p-4">
+            <div class="font-medium text-gray-900">${escapeHtml(r.Teacher)}</div>
+          </td>
+          <td class="p-4">${statusBadge(r.Status)}</td>
         `;
         rowsTbody.appendChild(tr);
       });
 
       if (!filtered.length) {
-        rowsTbody.innerHTML = `<tr><td class="p-2 text-gray-500" colspan="7">No rows</td></tr>`;
+        rowsTbody.innerHTML = `<tr><td class="p-4 text-gray-500 text-center" colspan="7">
+          <div class="py-8">
+            <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"></path>
+            </svg>
+            <div class="text-gray-500">No bookings found</div>
+          </div>
+        </td></tr>`;
       }
     }
 
     function statusBadge(s) {
       const S = (s || 'Booked').toLowerCase();
-      if (S.includes('book')) return `<span class="badge badge-green">Booked</span>`;
-      if (S.includes('hold') || S.includes('pending')) return `<span class="badge badge-amber">Pending</span>`;
-      return `<span class="badge badge-amber">${escapeHtml(s || '—')}</span>`;
+      if (S.includes('book')) return `<span class="status-badge badge-booked">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+        </svg>
+        Booked
+      </span>`;
+      if (S.includes('hold') || S.includes('pending')) return `<span class="status-badge badge-pending">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+        </svg>
+        Pending
+      </span>`;
+      return `<span class="status-badge badge-pending">${escapeHtml(s || '—')}</span>`;
     }
 
     function escapeHtml(str) {
       return (str ?? '').toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     }
 
-    // ======= Similarity (free, on‑device) =======
-    let embedder = null; // transformers pipeline
+    // ======= Similarity (free, on-device) =======
+    let embedder = null;
     async function ensureEmbedderLoaded() {
       if (!embedder) {
-        // This loads a small sentence-transformer under the hood
         embedder = await window.transformers.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
       }
     }
 
     async function embedText(text) {
-      // Mean-pooled, normalized embedding
       const out = await embedder(text, { pooling: 'mean', normalize: true });
       return Array.from(out.data);
     }
 
     function cosineSim(a, b) {
-      let s = 0; for (let i = 0; i < a.length; i++) s += a[i]*b[i];
-      return s; // normalized already
+      let s = 0; 
+      for (let i = 0; i < a.length; i++) s += a[i]*b[i];
+      return s;
     }
 
     function canonicalizeDataset(ds) {
@@ -349,131 +616,208 @@
     }
 
     function isExactConflict(newRow, existingRow) {
-      // Conflict rules:
-      // 1) Exact same TopicTitle (case-insensitive) → conflict
-      // 2) Same Dataset (name or link) AND very similar Goal → conflict
       const sameTopic = (newRow.TopicTitle || '').trim().toLowerCase() === (existingRow.TopicTitle || '').trim().toLowerCase();
       if (sameTopic) return true;
 
       const dsNew = canonicalizeDataset(newRow.Dataset || newRow.DatasetLink);
       const dsOld = canonicalizeDataset(existingRow.Dataset || existingRow.DatasetLink);
-      return dsNew && dsOld && dsNew === dsOld; // final decision refined with similarity if smart mode on
+      return dsNew && dsOld && dsNew === dsOld;
     }
 
     checkBtn.addEventListener('click', async () => {
+      const lang = document.getElementById('lang').value;
+      const L = i18n[lang] || i18n.en;
+      
+      // Show loading state
+      checkBtn.innerHTML = `
+        <div class="loading-spinner"></div>
+        <span>${L.checking}</span>
+      `;
+      checkBtn.disabled = true;
+      
       availabilityNote.innerHTML = '';
       conflictsBox.innerHTML = '';
       checkResult.classList.remove('hidden');
 
-      const candidate = {
-        TopicTitle: input.topicTitle.value.trim(),
-        Dataset: input.dataset.value.trim(),
-        DatasetLink: input.datasetLink.value.trim(),
-        Goal: input.goal.value.trim()
-      };
+      try {
+        const candidate = {
+          TopicTitle: input.topicTitle.value.trim(),
+          Dataset: input.dataset.value.trim(),
+          DatasetLink: input.datasetLink.value.trim(),
+          Goal: input.goal.value.trim()
+        };
 
-      const lang = document.getElementById('lang').value;
-      const L = i18n[lang] || i18n.en;
-
-      // Basic checks
-      if (!candidate.TopicTitle && !candidate.Dataset && !candidate.Goal) {
-        availabilityNote.innerHTML = `<div class="badge badge-amber">Please enter topic/dataset/goal</div>`;
-        return;
-      }
-
-      let smart = smartCheck.checked;
-      let candVec = null;
-      if (smart) {
-        // Might take a few seconds on first load
-        await ensureEmbedderLoaded();
-        candVec = await embedText(`${candidate.TopicTitle} ${candidate.Dataset} ${candidate.Goal}`);
-      }
-
-      // Scan existing rows
-      let topMatches = [];
-      for (const r of allRows) {
-        const maybeConflict = isExactConflict(candidate, r);
-        let score = 0;
-        if (smart) {
-          const rVec = await embedText(`${r.TopicTitle} ${r.Dataset} ${r.Goal}`);
-          score = cosineSim(candVec, rVec);
-        } else {
-          // lightweight lexical similarity (Jaccard on tokens)
-          const A = new Set((`${candidate.TopicTitle} ${candidate.Dataset} ${candidate.Goal}`).toLowerCase().split(/\W+/).filter(Boolean));
-          const B = new Set((`${r.TopicTitle} ${r.Dataset} ${r.Goal}`).toLowerCase().split(/\W+/).filter(Boolean));
-          let inter = 0; for (const x of A) if (B.has(x)) inter++;
-          const union = A.size + B.size - inter;
-          score = union ? inter/union : 0;
+        if (!candidate.TopicTitle && !candidate.Dataset && !candidate.Goal) {
+          availabilityNote.innerHTML = `<div class="status-badge badge-warning">Please enter topic, dataset, or goal</div>`;
+          return;
         }
-        topMatches.push({ r, score, maybeConflict });
+
+        let smart = smartCheck.checked;
+        let candVec = null;
+        if (smart) {
+          await ensureEmbedderLoaded();
+          candVec = await embedText(`${candidate.TopicTitle} ${candidate.Dataset} ${candidate.Goal}`);
+        }
+
+        let topMatches = [];
+        for (const r of allRows) {
+          const maybeConflict = isExactConflict(candidate, r);
+          let score = 0;
+          if (smart) {
+            const rVec = await embedText(`${r.TopicTitle} ${r.Dataset} ${r.Goal}`);
+            score = cosineSim(candVec, rVec);
+          } else {
+            const A = new Set((`${candidate.TopicTitle} ${candidate.Dataset} ${candidate.Goal}`).toLowerCase().split(/\W+/).filter(Boolean));
+            const B = new Set((`${r.TopicTitle} ${r.Dataset} ${r.Goal}`).toLowerCase().split(/\W+/).filter(Boolean));
+            let inter = 0; 
+            for (const x of A) if (B.has(x)) inter++;
+            const union = A.size + B.size - inter;
+            score = union ? inter/union : 0;
+          }
+          topMatches.push({ r, score, maybeConflict });
+        }
+
+        topMatches.sort((a,b) => b.score - a.score);
+        const strong = topMatches.filter(x => x.score >= 0.85 || (x.maybeConflict && x.score >= 0.75));
+        const medium = topMatches.filter(x => x.score >= 0.65 && x.score < 0.85);
+
+        if (strong.length) {
+          availabilityNote.innerHTML = `<div class="status-badge badge-conflict">${L.conflict_high}</div>`;
+        } else if (medium.some(x => x.maybeConflict)) {
+          availabilityNote.innerHTML = `<div class="status-badge badge-warning">${L.conflict_medium}</div>`;
+        } else {
+          availabilityNote.innerHTML = `<div class="status-badge badge-available">${L.available}</div>`;
+        }
+
+        const top5 = topMatches.slice(0, 5).filter(x => x.score > 0.1);
+        if (top5.length) {
+          conflictsBox.innerHTML = `
+            <div class="mt-4">
+              <h4 class="font-semibold text-gray-700 mb-3">Similar Topics Found:</h4>
+              ${top5.map(({r, score}) => `
+                <div class="mb-3 p-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="font-medium text-gray-900">${escapeHtml(r.TopicTitle)}</div>
+                    <div class="text-sm text-gray-500">
+                      Similarity: ${(score*100).toFixed(1)}%
+                    </div>
+                  </div>
+                  <div class="similarity-bar mb-2">
+                    <div class="similarity-indicator" style="width: ${100-score*100}%"></div>
+                  </div>
+                  <div class="text-sm text-gray-600 mb-1">
+                    <strong>Dataset:</strong> ${escapeHtml(r.Dataset)} 
+                    ${r.DatasetLink ? `<a href="${r.DatasetLink}" target="_blank" class="text-blue-600 hover:text-blue-800 ml-1">↗</a>` : ''}
+                  </div>
+                  <div class="text-sm text-gray-600 mb-1">
+                    <strong>Goal:</strong> ${escapeHtml(r.Goal)}
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <strong>Supervisor:</strong> ${escapeHtml(r.Teacher)}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+      } catch (error) {
+        console.error('Check error:', error);
+        availabilityNote.innerHTML = `<div class="status-badge badge-conflict">Error during check: ${error.message}</div>`;
+      } finally {
+        // Reset button
+        checkBtn.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>${L.check}</span>
+        `;
+        checkBtn.disabled = false;
       }
-
-      topMatches.sort((a,b) => b.score - a.score);
-      const strong = topMatches.filter(x => x.score >= 0.85 || (x.maybeConflict && x.score >= 0.75));
-      const medium = topMatches.filter(x => x.score >= 0.65 && x.score < 0.85);
-
-      if (strong.length) {
-        availabilityNote.innerHTML = `<div class="badge badge-red">${L.conflict_high}</div>`;
-      } else if (medium.some(x => x.maybeConflict)) {
-        availabilityNote.innerHTML = `<div class="badge badge-amber">${L.conflict_medium}</div>`;
-      } else {
-        availabilityNote.innerHTML = `<div class="badge badge-green">${L.available}</div>`;
-      }
-
-      // Show top 5 matches
-      const top5 = topMatches.slice(0, 5);
-      conflictsBox.innerHTML = top5.map(({r, score}) => `
-        <div class="mt-2 p-2 rounded-lg border bg-gray-50">
-          <div class="text-xs text-gray-500">similarity: ${(score*100).toFixed(1)}%</div>
-          <div class="font-medium">${escapeHtml(r.TopicTitle)} — <span class="text-gray-600">${escapeHtml(r.Teacher)}</span></div>
-          <div class="text-sm">${escapeHtml(r.Dataset)} ${r.DatasetLink ? `<a href="${r.DatasetLink}" target="_blank" class="text-blue-700 underline">↗</a>` : ''}</div>
-          <div class="text-sm text-gray-700">${escapeHtml(r.Goal)}</div>
-        </div>
-      `).join('');
     });
 
     addBtn.addEventListener('click', async () => {
+      const lang = document.getElementById('lang').value;
+      const L = i18n[lang] || i18n.en;
+      
+      // Show loading state
+      addBtn.innerHTML = `
+        <div class="loading-spinner"></div>
+        <span>${L.adding}</span>
+      `;
+      addBtn.disabled = true;
       addStatus.textContent = '';
-      const payload = {
-        StudentName: input.studentName.value.trim(),
-        StudentID: input.studentId.value.trim(),
-        Email: input.email.value.trim(),
-        Program: input.program.value.trim(),
-        TopicTitle: input.topicTitle.value.trim(),
-        Dataset: input.dataset.value.trim(),
-        DatasetLink: input.datasetLink.value.trim(),
-        Goal: input.goal.value.trim(),
-        Teacher: input.teacher.value.trim(),
-        Status: 'Booked',
-        Notes: ''
-      };
 
       try {
-        const form = new URLSearchParams();
-        form.set('token', API_TOKEN);
-        form.set('data', JSON.stringify(payload));
+        const payload = {
+          StudentName: input.studentName.value.trim(),
+          StudentID: input.studentId.value.trim(),
+          Email: input.email.value.trim(),
+          Program: input.program.value.trim(),
+          TopicTitle: input.topicTitle.value.trim(),
+          Dataset: input.dataset.value.trim(),
+          DatasetLink: input.datasetLink.value.trim(),
+          Goal: input.goal.value.trim(),
+          Teacher: input.teacher.value.trim(),
+          Status: 'Booked',
+          Notes: ''
+        };
+
+        // Validation
+        if (!payload.StudentName || !payload.TopicTitle || !payload.Teacher) {
+          throw new Error('Please fill in required fields: Student Name, Topic Title, and Teacher');
+        }
+
+        const formData = new FormData();
+        formData.append('token', API_TOKEN);
+        formData.append('data', JSON.stringify(payload));
 
         const res = await fetch(SCRIPT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: form.toString(),
+          body: formData
         });
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
         const data = await res.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
         if (data && data.ok) {
-          addStatus.className = 'text-green-700';
-          addStatus.textContent = i18n[document.getElementById('lang').value].added;
+          addStatus.className = 'text-green-600 font-medium';
+          addStatus.textContent = L.added;
+          
+          // Clear form
+          Object.values(input).forEach(el => el.value = '');
+          
+          // Refresh data
           await loadRows();
+          
+          // Clear check results
+          checkResult.classList.add('hidden');
         } else {
-          throw new Error('API error');
+          throw new Error('Unexpected response format');
         }
       } catch (err) {
-        addStatus.className = 'text-red-700';
-        addStatus.textContent = i18n[document.getElementById('lang').value].add_error;
-        console.error(err);
+        console.error('Add error:', err);
+        addStatus.className = 'text-red-600 font-medium';
+        addStatus.textContent = `${L.add_error}: ${err.message}`;
+      } finally {
+        // Reset button
+        addBtn.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          <span>${L.add_btn}</span>
+        `;
+        addBtn.disabled = false;
       }
     });
 
-    // Init
+    // Initialize
     loadRows();
   </script>
 </body>
